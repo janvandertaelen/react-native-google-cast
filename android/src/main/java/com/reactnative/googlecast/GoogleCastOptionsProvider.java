@@ -110,6 +110,7 @@ public class GoogleCastOptionsProvider implements OptionsProvider {
     return new CastOptions.Builder()
       .setReceiverApplicationId(getReceiverApplicationId(context))
       .setCastMediaOptions(mediaOptions)
+      .setStopReceiverApplicationWhenEndingSession(true)
       .build();
   }
 
