@@ -1,4 +1,4 @@
-## [4.1.2](https://github.com/react-native-google-cast/react-native-google-cast/compare/4.1.1...4.1.2) (2021-06-24)
+## [4.1.3](https://github.com/react-native-google-cast/react-native-google-cast/compare/4.1.1...4.1.2) (2021-06-24)
 
 
 ### Bug Fixes
