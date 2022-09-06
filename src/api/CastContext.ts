@@ -1,10 +1,10 @@
 import { NativeEventEmitter, NativeModules } from 'react-native'
 import CastState from '../types/CastState'
+import PlayServicesState from '../types/PlayServicesState'
 import DiscoveryManager from './DiscoveryManager'
 import SessionManager from './SessionManager'
 
 const { RNGCCastContext: Native } = NativeModules
-const EventEmitter = new NativeEventEmitter(Native)
 
 /**
  * A root class containing global objects and state for the Cast SDK. It is the default export of this library.
@@ -25,8 +25,17 @@ export default class CastContext {
   static sessionManager = new SessionManager()
 
   /** The current casting state for the application. */
-  static getCastState(): Promise<CastState> {
+  static getCastState(): Promise<CastState | null> {
     return Native.getCastState()
+  }
+
+  /**
+   * (Android only) Verifies that Google Play services is installed and enabled on this device, and that the version installed on this device is no older than the one required by this client. Can be used to determine if the Cast framework is available.
+   *
+   * @see [Android](https://developers.google.com/android/reference/com/google/android/gms/common/GoogleApiAvailability#isGooglePlayServicesAvailable(android.content.Context))
+   */
+  static getPlayServicesState(): Promise<PlayServicesState | null> {
+    return Native.getPlayServicesState()
   }
 
   /**
@@ -45,6 +54,10 @@ export default class CastContext {
 
   /**
    * Displays the Cast Dialog programmatically. Users can also open the Cast Dialog by clicking on a Cast Button.
+   *
+   * Notes:
+   * - on Android, the Cast Button needs to be rendered somewhere on the screen (can be hidden) in order for this method to work.
+   * - on iOS 14+, the user has to first press the Cast Button manually and grant permissions (once per app install). Until then, this method will not work.
    *
    * @returns `true` if the Cast Dialog was shown, `false` if it was not shown.
    */
@@ -75,6 +88,18 @@ export default class CastContext {
   }
 
   /**
+   * (Android only) Show a dialog with a localized message about the error state. Upon user confirmation (by tapping on dialog) will direct them to the Play Store if Google Play services is out of date or missing, or to system settings if Google Play services is disabled on the device.
+   *
+   * @param playServicesState state returned from {@link CastContext.getPlayServicesState}. If it's `success`, the dialog will not be shown.
+   * @see [Android](https://developers.google.com/android/reference/com/google/android/gms/common/GoogleApiAvailability#showErrorDialogFragment(android.app.Activity,%20int,%20int))
+   */
+  static showPlayServicesErrorDialog(
+    playServicesState: PlayServicesState
+  ): Promise<boolean> {
+    return Native.showPlayServicesErrorDialog(playServicesState)
+  }
+
+  /**
    * Listen for changes of the Cast State.
    *
    * @example
@@ -90,6 +115,7 @@ export default class CastContext {
    * ```
    */
   static onCastStateChanged(listener: (castState: CastState) => void) {
-    return EventEmitter.addListener(Native.CAST_STATE_CHANGED, listener)
+    const eventEmitter = new NativeEventEmitter(Native)
+    return eventEmitter.addListener(Native.CAST_STATE_CHANGED, listener)
   }
 }

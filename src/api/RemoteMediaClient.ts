@@ -3,18 +3,15 @@ import {
   NativeEventEmitter,
   NativeModules,
 } from 'react-native'
-import {
-  MediaPlayerIdleReason,
-  MediaPlayerState,
-} from 'react-native-google-cast'
 import MediaLoadRequest from '../types/MediaLoadRequest'
-import { MediaSeekOptions } from '../types/MediaSeekOptions'
-import TextTrackStyle from '../types/TextTrackStyle'
+import MediaPlayerIdleReason from '../types/MediaPlayerIdleReason'
+import MediaPlayerState from '../types/MediaPlayerState'
 import MediaQueueItem from '../types/MediaQueueItem'
+import MediaSeekOptions from '../types/MediaSeekOptions'
 import MediaStatus from '../types/MediaStatus'
+import TextTrackStyle from '../types/TextTrackStyle'
 
 const { RNGCRemoteMediaClient: Native } = NativeModules
-const EventEmitter = new NativeEventEmitter(Native)
 
 /**
  * Class for controlling a media player application running on a Cast receiver.
@@ -246,7 +243,8 @@ export default class RemoteMediaClient {
 
   /** Called when media status changes. */
   onMediaStatusUpdated(handler: (mediaStatus: MediaStatus | null) => void) {
-    return EventEmitter.addListener(Native.MEDIA_STATUS_UPDATED, handler)
+    const eventEmitter = new NativeEventEmitter(Native)
+    return eventEmitter.addListener(Native.MEDIA_STATUS_UPDATED, handler)
   }
 
   /** Called when finished playback of an item. */
@@ -299,8 +297,10 @@ export default class RemoteMediaClient {
   ) {
     Native.setProgressUpdateInterval(interval)
 
+    const eventEmitter = new NativeEventEmitter(Native)
+
     this.progressUpdateListener?.remove()
-    this.progressUpdateListener = EventEmitter.addListener(
+    this.progressUpdateListener = eventEmitter.addListener(
       Native.MEDIA_PROGRESS_UPDATED,
       ([progress, duration]) => handler(progress, duration)
     )

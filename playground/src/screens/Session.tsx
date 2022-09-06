@@ -8,10 +8,11 @@ import CastContext, {
 export default function Session() {
   const [lastMessage, setLastMessage] = useState<{}>()
 
-  const session = useCastSession()
+  const session = useCastSession({ ignoreSessionUpdatesInBackground: true })
   const castChannel = useCastChannel(
     'urn:x-cast:com.reactnative.googlecast.playground',
-    setLastMessage
+    setLastMessage,
+    { ignoreSessionUpdatesInBackground: true }
   )
 
   const [mute, setMute] = useState(false)

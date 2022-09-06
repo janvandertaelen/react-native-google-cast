@@ -45,8 +45,6 @@ public class RNGoogleCastButtonManager
 
   @Override
   public @NonNull MediaRouteButton createViewInstance(@NonNull ThemedReactContext context) {
-    CastContext castContext = CastContext.getSharedInstance(context);
-
     final MediaRouteButton button = new ColorableMediaRouteButton(context);
 
     Context contextThemeWrapper = new ContextThemeWrapper(context, androidx.mediarouter.R.style.Theme_MediaRouter);
@@ -54,9 +52,15 @@ public class RNGoogleCastButtonManager
     Drawable drawable = styleAttrs.getDrawable(androidx.mediarouter.R.styleable.MediaRouteButton_externalRouteEnabledDrawable);
     styleAttrs.recycle();
 
-    CastButtonFactory.setUpMediaRouteButton(context, button);
-
+    // the drawable needs to be set before calling CastButtonFactory.setupMediaRouteButton()
+    // otherwise it won't initiate with the correct visual state
     button.setRemoteIndicatorDrawable(drawable);
+
+    try {
+      CastContext.getSharedInstance(context);
+      CastButtonFactory.setUpMediaRouteButton(context, button);
+    } catch (Exception e) {
+    }
 
     return button;
   }
