@@ -22,13 +22,14 @@ function MyComponent() {
       mediaInfo: {
         contentUrl:
           'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/mp4/BigBuckBunny.mp4',
+        contentType: 'video/mp4',
       },
     })
   }
 
   // This will render native Cast button.
   // When a user presses it, a Cast dialog will prompt them to select a Cast device to connect to.
-  return <CastButton style={{ width: 24, height: 24 }} />
+  return <CastButton style={{ width: 24, height: 24, tintColor: 'black' }} />
 }
 ```
 
@@ -43,8 +44,7 @@ client.loadMedia({
     metadata: {
       images: [
         {
-          url:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/images/480x270/BigBuckBunny.jpg',
+          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/images/480x270/BigBuckBunny.jpg',
         },
       ],
       title: 'Big Buck Bunny',
@@ -60,3 +60,14 @@ client.loadMedia({
 ```
 
 Please see the [MediaLoadRequest](../api/interfaces/medialoadrequest) documentation for available options.
+
+## (Android) Handle missing Google Play Services
+
+On Android, you can use `CastContext.getPlayServicesState()` to check if Google Play Services are installed on the device. You can then call `CastContext.showPlayServicesErrorDialog` to inform the user and prompt them to install.
+
+```ts
+CastContext.getPlayServicesState().then((state) => {
+  if (state && state !== PlayServicesState.SUCCESS)
+    CastContext.showPlayServicesErrorDialog(state)
+})
+```

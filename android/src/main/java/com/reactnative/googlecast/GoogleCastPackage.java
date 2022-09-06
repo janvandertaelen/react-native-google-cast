@@ -1,10 +1,18 @@
 package com.reactnative.googlecast;
 
+import static android.content.Context.UI_MODE_SERVICE;
+
+import android.app.UiModeManager;
+import android.content.Context;
+import android.content.res.Configuration;
+
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.JavaScriptModule;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.ViewManager;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.reactnative.googlecast.api.RNGCCastContext;
 import com.reactnative.googlecast.api.RNGCCastSession;
 import com.reactnative.googlecast.api.RNGCDiscoveryManager;

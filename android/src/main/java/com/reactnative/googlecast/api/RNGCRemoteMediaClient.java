@@ -23,6 +23,8 @@ import com.google.android.gms.cast.framework.Session;
 import com.google.android.gms.cast.framework.SessionManager;
 import com.google.android.gms.cast.framework.SessionManagerListener;
 import com.google.android.gms.cast.framework.media.RemoteMediaClient;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.PendingResult;
 import com.reactnative.googlecast.types.RNGCJSONObject;
 import com.reactnative.googlecast.types.RNGCMediaLoadRequest;
@@ -65,6 +67,16 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule implements
     constants.put("MEDIA_STATUS_UPDATED", MEDIA_STATUS_UPDATED);
 
     return constants;
+  }
+
+  @ReactMethod
+  public void addListener(String eventName) {
+    // Set up any upstream listeners or background tasks as necessary
+  }
+
+  @ReactMethod
+  public void removeListeners(Integer count) {
+    // Remove upstream listeners, stop unnecessary background tasks
   }
 
   @ReactMethod
@@ -337,12 +349,14 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule implements
 
   @Override
   public void onHostResume() {
-    if (mListenersAttached) { return; }
-    
-    getReactApplicationContext().runOnUiQueueThread(new Runnable() {
+    final ReactApplicationContext context = getReactApplicationContext();
+
+    if (mListenersAttached || !RNGCCastContext.isCastApiAvailable(context)) return;
+
+    context.runOnUiQueueThread(new Runnable() {
       @Override
       public void run() {
-        SessionManager sessionManager = CastContext.getSharedInstance(getReactApplicationContext())
+        SessionManager sessionManager = CastContext.getSharedInstance(context)
           .getSessionManager();
         sessionManager.addSessionManagerListener(sessionListener);
 
@@ -357,10 +371,14 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule implements
 
   @Override
   public void onHostDestroy() {
-    getReactApplicationContext().runOnUiQueueThread(new Runnable() {
+    final ReactApplicationContext context = getReactApplicationContext();
+
+    if (!RNGCCastContext.isCastApiAvailable(context)) return;
+
+    context.runOnUiQueueThread(new Runnable() {
       @Override
       public void run() {
-        SessionManager sessionManager = CastContext.getSharedInstance(getReactApplicationContext())
+        SessionManager sessionManager = CastContext.getSharedInstance(context)
           .getSessionManager();
         sessionManager.removeSessionManagerListener(sessionListener);
 

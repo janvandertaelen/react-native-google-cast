@@ -1,5 +1,7 @@
 package com.reactnative.googlecast.api;
 
+import android.os.Bundle;
+
 import androidx.annotation.Nullable;
 import androidx.mediarouter.media.MediaRouteSelector;
 import androidx.mediarouter.media.MediaRouter;
@@ -72,6 +74,16 @@ public class RNGCDiscoveryManager
   }
 
   @ReactMethod
+  public void addListener(String eventName) {
+    // Set up any upstream listeners or background tasks as necessary
+  }
+
+  @ReactMethod
+  public void removeListeners(Integer count) {
+    // Remove upstream listeners, stop unnecessary background tasks
+  }
+
+  @ReactMethod
   public void getDevices(final Promise promise) {
     getReactApplicationContext().runOnUiQueueThread(new Runnable() {
       @Override
@@ -108,15 +120,15 @@ public class RNGCDiscoveryManager
 
   @Override
   public void onHostResume() {
-    if (mListenersAttached) {
-      return;
-    }
+    final ReactApplicationContext context = getReactApplicationContext();
 
-    getReactApplicationContext().runOnUiQueueThread(new Runnable() {
+    if (mListenersAttached || !RNGCCastContext.isCastApiAvailable(context)) return;
+
+    context.runOnUiQueueThread(new Runnable() {
       @Override
       public void run() {
         MediaRouteSelector selector = CastContext.getSharedInstance().getMergedSelector();
-        MediaRouter.getInstance(getReactApplicationContext()).addCallback(selector, mediaRouterCallback);
+        MediaRouter.getInstance(context).addCallback(selector, mediaRouterCallback);
       }
     });
     mListenersAttached = true;
@@ -124,10 +136,14 @@ public class RNGCDiscoveryManager
 
   @Override
   public void onHostDestroy() {
-    getReactApplicationContext().runOnUiQueueThread(new Runnable() {
+    final ReactApplicationContext context = getReactApplicationContext();
+
+    if (!RNGCCastContext.isCastApiAvailable(context)) return;
+
+    context.runOnUiQueueThread(new Runnable() {
       @Override
       public void run() {
-        MediaRouter.getInstance(getReactApplicationContext()).removeCallback(mediaRouterCallback);
+        MediaRouter.getInstance(context).removeCallback(mediaRouterCallback);
       }
     });
     mListenersAttached = false;
@@ -143,10 +159,18 @@ public class RNGCDiscoveryManager
     MediaRouter router = MediaRouter.getInstance(getReactApplicationContext());
 
     for (MediaRouter.RouteInfo routeInfo : router.getRoutes()) {
-      CastDevice device = CastDevice.getFromBundle(routeInfo.getExtras());
-      if (device != null) {
-        devices.pushMap(RNGCDevice.toJson(device));
-      }
+      // https://stackoverflow.com/a/57748577/384349
+      Bundle extras = routeInfo.getExtras();
+      CastDevice device = CastDevice.getFromBundle(extras);
+
+      if (device == null) continue;
+      if (extras == null) continue;
+      if (routeInfo.isDefault()) continue;
+      if (routeInfo.getDescription().equals("Google Cast Multizone Member")) continue;
+      if (routeInfo.getPlaybackType() != MediaRouter.RouteInfo.PLAYBACK_TYPE_REMOTE) continue;
+      if (extras.getString("com.google.android.gms.cast.EXTRA_SESSION_ID") != null) continue;
+
+      devices.pushMap(RNGCDevice.toJson(device));
     }
 
     return devices;
